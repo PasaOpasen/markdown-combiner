@@ -1,5 +1,5 @@
 
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Union
 
 import os
 import argparse
@@ -10,15 +10,32 @@ import re
 
 from dataclasses import dataclass
 
+#region CONSTANTS
 
 HEADING_RE = re.compile(
     r"^#+\s+\d+(\.\d+)*(\s.*)?$",
     re.MULTILINE
 )
 
+#endregion
+
+
+#region UTILS
+
+def read_text(result_path: Union[str, os.PathLike], encoding: str = 'utf-8'):
+    return Path(result_path).read_text(encoding=encoding, errors='ignore')
+
+
+def write_text(result_path: Union[str, os.PathLike], text: str, encoding: str = 'utf-8'):
+    p = Path(result_path)
+    p.mkdir(parents=True, exist_ok=True)
+
+#endregion
+
 
 @dataclass
 class Heading:
+    """wrapper on Markdown heading and the text after it"""
 
     level: int = 0
     """the level means the count of # in the heading"""
@@ -117,4 +134,8 @@ class Heading:
 
 if __name__ == '__main__':
 
-    Heading.extract_headings(Path('test/README.md').read_text(encoding='utf-8'))
+    Heading.extract_headings(read_text('test/README.md'))
+
+
+
+
