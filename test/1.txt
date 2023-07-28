@@ -1,0 +1,7 @@
+
+Some text file to put
+
+will put only text after this line------
+
+TEXT FROM TEXT FILE
+

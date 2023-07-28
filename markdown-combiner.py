@@ -24,6 +24,9 @@ start_to_type: Dict[str, Literal['put', 'shell']] = {
 }
 """command start to the string type of the command"""
 
+
+type_to_start = {t: s for s, t in start_to_type.items()}
+
 #endregion
 
 
@@ -55,6 +58,8 @@ def get_cmd_output(command: Union[str, Sequence[Any]], cwd: Optional[str] = None
 
 #endregion
 
+
+#region HEADINGS
 
 @dataclass
 class Heading:
@@ -162,6 +167,14 @@ class Heading:
         return init_string, headings
 
     @staticmethod
+    def add_headings(text: str, additional_level: str = ''):
+        if not additional_level:
+            return text
+
+        init_s, headings = Heading.extract_headings(text)
+        return init_s + ''.join(h.as_string(additional_level=additional_level) for h in headings)
+
+    @staticmethod
     def get_sectors_map(text: str) -> Dict[Tuple[int, int], str]:
         """
         returns sectors map of text symbols intervals
@@ -184,6 +197,22 @@ class Heading:
         return result
 
 
+hparser = argparse.ArgumentParser(
+    prog='@put@ inner command parser',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter
+)
+
+hparser.add_argument(
+    'FILE', action='store', type=str,
+    help='file to put',
+)
+hparser.add_argument(
+    '--start-after', '-s', action='store', type=str,
+    help='use only text after the line contains this pattern matching',
+    dest='start_after'
+)
+
+#endregion
 
 
 class Command:
@@ -213,11 +242,55 @@ class Command:
 
         self.file = from_file
 
+    def __str__(self):
+        return (
+            f"{type_to_start[self.type]}{self.command}@@ (in file {self.file})"
+        )
+
     def _exec_shell(self, directory: str, **kwargs) -> str:
         return get_cmd_output(self.command, cwd=directory)
 
-    def _exec_put(self, additional_level: str = '', **kwargs) -> str:
-        pass
+    def _exec_put(self, directory: str, additional_level: str = '', **kwargs) -> str:
+        parsed = hparser.parse_args(self.command.split())
+
+        f = parsed.FILE
+        pattern = parsed.start_after.strip("'")
+
+        if not os.path.exists(f):
+            n = os.path.join(directory, f)
+            if not os.path.exists(n):
+                raise FileNotFoundError(
+                    f"not found file {f} using in command {self}"
+                )
+            f = n
+
+        directory = os.path.dirname(f)
+        text = read_text(f)
+
+        if pattern:
+            e = re.compile(pattern, flags=re.MULTILINE)
+            matches = [
+                m for m in e.finditer(text)
+                if not Command.RE.match(
+                    text[
+                        text.rfind('\n', 0, m.start()) + 1:text.find('\n', m.end())
+                    ]
+                )
+            ]
+            """the matches of the pattern but outside of commands"""
+            if matches:
+                end_match = matches[-1].end()
+                end_match = text.find('\n', end_match) + 1
+                """the index of first text symbol after the line contains the match"""
+                text = text[end_match:]
+
+        text = Command.translate_text(text, directory=directory, file_name=f)
+
+        if f.endswith('.md'):  # additional markdown process
+            text = Heading.add_headings(text, additional_level=additional_level)
+
+        return text
+
 
     def exec(self, *args, **kwargs) -> str:
         f = getattr(self, f"_exec_{self.type}", None)
@@ -293,7 +366,8 @@ if __name__ == '__main__':
     # Heading.extract_headings(read_text('test/README.md'))
     write_text(
         'result.md',
-        Command.translate_file('test/README.md'),
+        # Command.translate_file('test/README.md'),
+        Command.translate_file('test/example2.md'),
     )
 
 
