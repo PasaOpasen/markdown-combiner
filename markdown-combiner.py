@@ -260,7 +260,7 @@ class Command:
         parsed = hparser.parse_args(self.command.split())
 
         f = parsed.FILE
-        pattern = parsed.start_after.strip("'")
+        pattern = parsed.start_after
 
         if not os.path.exists(f):
             n = os.path.join(directory, f)
@@ -274,6 +274,7 @@ class Command:
         text = read_text(f)
 
         if pattern:
+            pattern = pattern.strip("'")
             e = re.compile(pattern, flags=re.MULTILINE)
             matches = [
                 m for m in e.finditer(text)
@@ -295,7 +296,7 @@ class Command:
         if f.endswith('.md'):  # additional markdown process
             text = Heading.add_headings(text, additional_level=additional_level)
 
-        if pattern.strip:
+        if parsed.strip:
             text = text.strip()
 
         return text
