@@ -215,8 +215,14 @@ hparser.add_argument(
 )
 hparser.add_argument(
     '--start-after', '-s', action='store', type=str,
-    help='use only text after the line contains this pattern matching',
+    help='use only text after the last line contains this pattern matching',
     dest='start_after'
+)
+
+hparser.add_argument(
+    '--ends-before', '-e', action='store', type=str,
+    help='use only text before the first line contains this pattern matching',
+    dest='end_before'
 )
 
 hparser.add_argument(
@@ -289,7 +295,8 @@ class Command:
         parsed = hparser.parse_args(self.command.split())
 
         f = parsed.FILE
-        pattern = parsed.start_after
+        pattern_start = parsed.start_after
+        pattern_end = parsed.end_before
 
         if not os.path.exists(f):
             n = os.path.join(directory, f)
@@ -305,10 +312,10 @@ class Command:
         directory = os.path.dirname(f)
         text = read_text(f)
 
-        if pattern:
+        def get_matches(pattern: str) -> List[re.Match]:
             pattern = pattern.strip("'")
             e = re.compile(pattern, flags=re.MULTILINE)
-            matches = [
+            _matches = [
                 m for m in e.finditer(text)
                 if not Command.RE.match(
                     text[
@@ -317,11 +324,23 @@ class Command:
                 )
             ]
             """the matches of the pattern but outside of commands"""
+            return _matches
+
+        if pattern_start:
+            matches = get_matches(pattern_start)
             if matches:
                 end_match = matches[-1].end()
                 end_match = text.find('\n', end_match) + 1
                 """the index of first text symbol after the line contains the match"""
                 text = text[end_match:]
+
+        if pattern_end:
+            matches = get_matches(pattern_end)
+            if matches:
+                start_match = matches[0].start()
+                start_match = text.rfind('\n', 0, start_match) + 1
+                """the index of last text symbol before the line contains the match"""
+                text = text[:start_match]
 
         text = Command.translate_text(text, directory=directory, file_name=f)
 
