@@ -436,7 +436,12 @@ mparser.add_argument('OUTPUT_FILE', type=str, help='Path to save the output docu
 
 
 def main():
+
     args = sys.argv[1:]
+
+    if os.getenv('PARSER', 'main') != 'main':
+        parsed = hparser.parse_args()
+        return
 
     parsed = mparser.parse_args(args)
 
