@@ -139,8 +139,12 @@ class Heading:
 
         if len(backticks) > 1:  # some heading candidates maybe must be removed
 
-            odds = backticks[::2]
-            evens = backticks[1::2]
+            code_intervals = [
+                (a, b)
+                for a, b in zip(backticks[::2], backticks[1::2])
+                if b - a > 1  # filter useless
+            ]
+            """intervals with code between them, like `this`"""
 
             to_remove = set()
             for h in heading_candidates:
@@ -148,7 +152,7 @@ class Heading:
                     continue
 
                 if any(
-                    a < h < b for a, b in zip(odds, evens)
+                    a < h < b for a, b in code_intervals
                 ):  # remove headings between odd and even ticks
                     to_remove.add(h)
 
