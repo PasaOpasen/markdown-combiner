@@ -225,6 +225,12 @@ hparser.add_argument(
     dest='strip'
 )
 
+hparser.add_argument(
+    '--allow-file-not-found', '-l', action='store_true',
+    help='skip commands with unknown file',
+    dest='allow_file_not_found'
+)
+
 #endregion
 
 
@@ -288,9 +294,12 @@ class Command:
         if not os.path.exists(f):
             n = os.path.join(directory, f)
             if not os.path.exists(n):
-                raise FileNotFoundError(
-                    f"not found file {f} using in command {self}"
-                )
+                message = f"not found file {f} using in command {self}"
+                if parsed.allow_file_not_found:
+                    print(message)
+                    return self.short_string
+
+                raise FileNotFoundError(message)
             f = n
 
         directory = os.path.dirname(f)
