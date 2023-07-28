@@ -225,16 +225,13 @@ class Command:
         return f(*args, **kwargs)
 
     @staticmethod
-    def translate_file(path: str) -> str:
-
-        file_text = read_text(path)
-        directory = str(Path(path).parent.absolute())
+    def translate_text(file_text: str, directory: str, file_name: str) -> str:
 
         matches = [(m.start(), m.end()) for m in Command.RE.finditer(file_text)]
         if not matches:
             return file_text
 
-        if path.endswith('.md'):  # get sectors for markdown
+        if file_name.endswith('.md'):  # get sectors for markdown
             sectors = Heading.get_sectors_map(file_text)
         else:
             sectors = {(0, len(file_text)): ''}
@@ -249,7 +246,7 @@ class Command:
         def translate(pos: Tuple[int, int]) -> str:
             """executes the command on this position"""
             _s, _e = pos
-            return Command(file_text[_s:_e], from_file=path).exec(
+            return Command(file_text[_s:_e], from_file=file_name).exec(
                 additional_level=get_sector(_s),
                 directory=directory
             )
@@ -281,7 +278,13 @@ class Command:
 
         return ''.join(texts)
 
-
+    @staticmethod
+    def translate_file(path: str) -> str:
+        return Command.translate_text(
+            file_text=read_text(path),
+            directory=str(Path(path).parent.absolute()),
+            file_name=path
+        )
 
 
 
