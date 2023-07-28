@@ -421,17 +421,46 @@ class Command:
         )
 
 
+#region CLI
 
-if __name__ == '__main__':
+mparser = argparse.ArgumentParser(
+    prog='markdown-combiner.py',
+    description=(
+        'Script with combines several files with shell insertions execution and special features for *.md files'
+    ),
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter
+)
 
-    # Heading.extract_headings(read_text('test/README.md'))
+mparser.add_argument('INPUT_FILE', type=str, help='Text file to process')
+mparser.add_argument('OUTPUT_FILE', type=str, help='Path to save the output document')
+
+
+def main():
+    args = sys.argv[1:]
+
+    parsed = mparser.parse_args(args)
+
     write_text(
-        'result.md',
-        # Command.translate_file('test/README.md'),
-        # Command.translate_file('test/example2.md'),
-        Command.translate_file('../docutable/README.md'),
+        parsed.OUTPUT_FILE,
+        text=Command.translate_file(
+            parsed.INPUT_FILE
+        ),
     )
 
 
+#endregion
+
+
+if __name__ == '__main__':
+
+    # # Heading.extract_headings(read_text('test/README.md'))
+    # write_text(
+    #     'result.md',
+    #     # Command.translate_file('test/README.md'),
+    #     # Command.translate_file('test/example2.md'),
+    #     Command.translate_file('../docutable/README.md'),
+    # )
+
+    main()
 
 
