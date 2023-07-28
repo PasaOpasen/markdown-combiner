@@ -211,7 +211,7 @@ hparser = argparse.ArgumentParser(
 
 hparser.add_argument(
     'FILE', action='store', type=str,
-    help='file to put',
+    help='file to put, absolute path or the path relative to file contains current directive',
 )
 hparser.add_argument(
     '--start-after', '-s', action='store', type=str,
