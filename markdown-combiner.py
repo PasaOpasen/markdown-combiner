@@ -212,6 +212,12 @@ hparser.add_argument(
     dest='start_after'
 )
 
+hparser.add_argument(
+    '--strip', '-t', action='store_true',
+    help='strip output text',
+    dest='strip'
+)
+
 #endregion
 
 
@@ -288,6 +294,9 @@ class Command:
 
         if f.endswith('.md'):  # additional markdown process
             text = Heading.add_headings(text, additional_level=additional_level)
+
+        if pattern.strip:
+            text = text.strip()
 
         return text
 
@@ -367,7 +376,8 @@ if __name__ == '__main__':
     write_text(
         'result.md',
         # Command.translate_file('test/README.md'),
-        Command.translate_file('test/example2.md'),
+        # Command.translate_file('test/example2.md'),
+        Command.translate_file('../docutable/README.md'),
     )
 
 
