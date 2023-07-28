@@ -3,6 +3,7 @@
 from typing import Optional, Tuple, List, Union, Literal, Dict, Sequence, Any
 
 import os
+import sys
 import argparse
 
 from pathlib import Path
@@ -12,6 +13,8 @@ import re
 from dataclasses import dataclass
 
 #region CONSTANTS
+
+IS_WINDOWS = sys.platform == 'win32'
 
 HEADING_RE = re.compile(
     r"^#+\s+\d+(\.\d+)*(\s.*)?$",
@@ -244,16 +247,32 @@ class Command:
         else:
             raise ValueError(f"unknown command type: {text}")
 
+
         assert self.command, 'empty command'
 
         self.file = from_file
 
+    @property
+    def short_string(self):
+        return f"{type_to_start[self.type]}{self.command}@@"
+
     def __str__(self):
         return (
-            f"{type_to_start[self.type]}{self.command}@@ (in file {self.file})"
+            f"{self.short_string} (in file {self.file})"
         )
 
     def _exec_shell(self, directory: str, **kwargs) -> str:
+
+        print(f"Executing {self}")
+
+        if IS_WINDOWS:
+            try:
+                return get_cmd_output(self.command, cwd=directory)
+            except OSError:
+                from traceback import print_exc
+                print_exc()
+                return self.short_string
+
         return get_cmd_output(self.command, cwd=directory)
 
     def _exec_put(self, directory: str, additional_level: str = '', **kwargs) -> str:
