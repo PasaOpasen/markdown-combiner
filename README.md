@@ -4,6 +4,7 @@
   - [**Shell** directive](#shell-directive)
   - [**Put** directive](#put-directive)
     - [Put example](#put-example)
+    - [Markdown headings shift](#markdown-headings-shift)
 - [Execution](#execution)
 
 
@@ -75,7 +76,7 @@ Don't include this message!
 
 ```
 
-readme.md
+readme.md:
 ```md
 # About
 ...
@@ -94,6 +95,44 @@ start
 Some text to include;
 this too
 finish
+```
+
+### Markdown headings shift
+
+If **put** directive matches next conditions:
+* is inside markdown file in the numbered section (like `### 5.4.1`)
+* directives to the part of markdown with numbered sections
+then the sections of included file will be shifted with the section of including file.
+
+Example:
+
+a.md:
+```md
+# 1 About
+
+## 1.1 S1
+
+### 1.1.1 SS
+
+## 1.2 S2
+```
+
+b.md:
+```md
+# 5 Title
+@put@a.md@@
+```
+
+translation result:
+```md
+# 5 Title
+## 5.1 About
+
+### 5.1.1 S1
+
+#### 5.1.1.1 SS
+
+### 5.1.2 S2
 ```
 
 # Execution
