@@ -210,8 +210,11 @@ hparser = argparse.ArgumentParser(
 )
 
 hparser.add_argument(
-    'FILE', action='store', type=str,
-    help='file to put, absolute path or the path relative to file contains current directive',
+    'FILE', action='store', type=str, nargs='+',
+    help=(
+        'file to put, absolute path or the path relative to file contains current directive; '
+        'if u put several files the first existing will be chosen'
+    ),
 )
 hparser.add_argument(
     '--start-after', '-s', action='store', type=str,
@@ -277,6 +280,40 @@ class Command:
             f"{self.short_string} (in file {self.file})"
         )
 
+    def _select_file(
+        self,
+        directory: str,
+        candidates: Sequence[str],
+        allow_file_not_found: bool = False
+    ) -> str:
+        """from several file candidates selects the first existing file"""
+
+        for i, f in enumerate(candidates):
+
+            if not os.path.exists(f):
+                n = os.path.join(directory, f)
+                if not os.path.exists(n):
+                    message = f"not found file {f} using in command {self}"
+
+                    if i == len(candidates) - 1:  # the last attempt
+                        if allow_file_not_found:
+                            print(message)
+                            return self.short_string
+
+                        raise FileNotFoundError(message)
+                    else:
+                        message += f"\n\twill try next files: {candidates[i+1:]}"
+                        print(message)
+                        continue
+                f = n
+
+            #
+            # file found
+            #
+            if i != 0:  # not from first attempt
+                print(f"\tOK {f} file is chosen")
+            return f
+
     def _exec_shell(self, directory: str, **kwargs) -> str:
 
         print(f"Executing {self}")
@@ -294,20 +331,16 @@ class Command:
     def _exec_put(self, directory: str, additional_level: str = '', **kwargs) -> str:
         parsed = hparser.parse_args(self.command.split())
 
-        f = parsed.FILE
+        files_to_try = parsed.FILE
         pattern_start = parsed.start_after
         pattern_end = parsed.end_before
 
-        if not os.path.exists(f):
-            n = os.path.join(directory, f)
-            if not os.path.exists(n):
-                message = f"not found file {f} using in command {self}"
-                if parsed.allow_file_not_found:
-                    print(message)
-                    return self.short_string
-
-                raise FileNotFoundError(message)
-            f = n
+        f = self._select_file(
+            directory=directory, candidates=files_to_try,
+            allow_file_not_found=parsed.allow_file_not_found
+        )
+        if f == self.short_string:  # file not found
+            return f
 
         directory = os.path.dirname(f)
         text = read_text(f)

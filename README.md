@@ -5,6 +5,7 @@
   - [**Put** directive](#put-directive)
     - [Put example](#put-example)
     - [Markdown headings shift](#markdown-headings-shift)
+    - [Notes](#notes)
 - [Execution](#execution)
 
 
@@ -40,10 +41,11 @@ Between center `@` there is a command with next options:
 ```sh
 usage: @put@ inner command parser [-h] [--start-after START_AFTER] [--ends-before END_BEFORE] [--strip]
                                   [--allow-file-not-found]
-                                  FILE
+                                  FILE [FILE ...]
 
 positional arguments:
-  FILE                  file to put, absolute path or the path relative to file contains current directive
+  FILE                  file to put, absolute path or the path relative to file contains current
+                        directive; if u put several files the first existing will be chosen
 
 options:
   -h, --help            show this help message and exit
@@ -133,6 +135,23 @@ translation result:
 #### 5.1.1.1 SS
 
 ### 5.1.2 S2
+```
+
+### Notes
+
+In Markdown the best form for *-s* and *-e* patterns is HTML comments:
+```md
+
+# text
+text
+
+<!---START (any mark text)-->
+
+text to select
+
+<!---
+END (multiline supports too)-->
+
 ```
 
 # Execution
