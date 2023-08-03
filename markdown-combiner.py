@@ -59,6 +59,48 @@ def get_cmd_output(command: Union[str, Sequence[Any]], cwd: Optional[str] = None
         cwd=cwd
     ).decode('utf-8', 'replace').strip()
 
+
+def get_backticks_indexes(text: str):
+    """
+    Searches and filters indexes of backticks (`)
+    Args:
+        text:
+
+    Returns:
+
+    """
+
+    res = []
+    start = 0
+    last_index = len(text) - 1
+
+    while True:
+        new_line = text.find('\n', start)
+        if new_line < 0:
+            new_line = last_index
+
+        # find all backticks in this string
+        backticks = [
+            s.start() for s in re.finditer('`', text[start:new_line])
+        ]
+
+        #
+        # keep backticks only if there are 3 in line or even count in line
+        #
+        if len(backticks) % 2 == 0 or len(backticks) == 3:
+            res.extend(
+                b + start for b in backticks
+            )
+        # else:
+        #     print(text[start:new_line])
+
+        if new_line == last_index:
+            break
+        start = new_line + 1
+
+
+    return backticks
+
 #endregion
 
 
@@ -132,9 +174,7 @@ class Heading:
         if not heading_candidates:
             return text, headings
 
-        backticks = [
-            s.start() for s in re.finditer('`', text)
-        ]
+        backticks = get_backticks_indexes(text)
         """backticks indexes"""
 
         if len(backticks) > 1:  # some heading candidates maybe must be removed
