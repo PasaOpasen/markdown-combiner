@@ -243,6 +243,26 @@ class Heading:
 
         return result
 
+#endregion
+
+#region HPARSER CLI
+
+
+class kvdictAppendAction(argparse.Action):
+    """
+    argparse action to split an argument into KEY=VALUE form
+    on the first = and append to a dictionary.
+    """
+    def __call__(self, parser, args, values, option_string=None):
+        assert(len(values) == 1)
+        try:
+            (k, v) = values[0].split("=", 2)
+        except ValueError as ex:
+            raise argparse.ArgumentError(self, f"could not parse argument \"{values[0]}\" as k=v format")
+        d = getattr(args, self.dest) or {}
+        d[k] = v
+        setattr(args, self.dest, d)
+
 
 hparser = argparse.ArgumentParser(
     prog='@put@ inner command parser',
@@ -272,6 +292,17 @@ hparser.add_argument(
     '--strip', '-t', action='store_true',
     help='strip output text',
     dest='strip'
+)
+
+hparser.add_argument(
+    "--replace", "-r",
+    nargs=1,
+    action=kvdictAppendAction,
+    metavar="KEY=VALUE",
+    default={},
+    type=str,
+    help="Add replacing in format like OLD=NEW. May appear multiple times",
+    dest='replaces'
 )
 
 hparser.add_argument(
@@ -305,7 +336,6 @@ class Command:
                 break
         else:
             raise ValueError(f"unknown command type: {text}")
-
 
         assert self.command, 'empty command'
 
@@ -422,6 +452,10 @@ class Command:
 
         if parsed.strip:
             text = text.strip()
+
+        if parsed.replaces:
+            for old, new in parsed.replaces.items():
+                text = text.replace(old, new)
 
         return text
 

@@ -40,12 +40,12 @@ After the script execution it whole will be replaced with the content of `../my_
 Between center `@` there is a command with next options:
 ```sh
 usage: @put@ inner command parser [-h] [--start-after START_AFTER] [--ends-before END_BEFORE] [--strip]
-                                  [--allow-file-not-found]
+                                  [--replace KEY=VALUE] [--allow-file-not-found]
                                   FILE [FILE ...]
 
 positional arguments:
-  FILE                  file to put, absolute path or the path relative to file contains current
-                        directive; if u put several files the first existing will be chosen
+  FILE                  file to put, absolute path or the path relative to file contains current directive; if u put
+                        several files the first existing will be chosen
 
 options:
   -h, --help            show this help message and exit
@@ -54,6 +54,8 @@ options:
   --ends-before END_BEFORE, -e END_BEFORE
                         use only text before the first line contains this pattern matching (default: None)
   --strip, -t           strip output text (default: False)
+  --replace KEY=VALUE, -r KEY=VALUE
+                        Add replacing in format like OLD=NEW. May appear multiple times (default: {})
   --allow-file-not-found, -l
                         skip commands with unknown file (default: False)
 ```
