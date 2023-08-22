@@ -164,5 +164,21 @@ python markdown-combiner.py input_file output_file
 
 This will translate command in `input_file` RECURSIVELY and save result to `output file`
 
+More info:
 
+```sh
+python markdown-combiner.py -h
+usage: markdown-combiner.py [-h] [-e] INPUT_FILE OUTPUT_FILE
+
+Script which combines several files with shell insertions execution and special features for *.md files
+
+positional arguments:
+  INPUT_FILE            Text file to process
+  OUTPUT_FILE           Path to save the output document
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -e, --ignore-shell-errors
+                        whether to ignore errors on shell commands (default: False)
+```
 

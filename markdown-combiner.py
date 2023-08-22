@@ -12,6 +12,8 @@ import re
 
 from dataclasses import dataclass
 
+from traceback import print_exc
+
 #region CONSTANTS
 
 IS_WINDOWS = sys.platform == 'win32'
@@ -388,15 +390,28 @@ class Command:
 
         print(f"Executing {self}")
 
+        _f = lambda: get_cmd_output(self.command, cwd=directory)
+        f = _f
+        if kwargs.get('parsed_namespace').ignore_shell_errors:
+            def f():
+                try:
+                    return _f()
+                except Exception:
+                    print(
+                        f"Some shell error on command {self.short_string} in file {self.file}, ignored"
+                    )
+                    print_exc()
+                    print()
+                    return self.short_string
+
         if IS_WINDOWS:
             try:
-                return get_cmd_output(self.command, cwd=directory)
+                return f()
             except OSError:
-                from traceback import print_exc
                 print_exc()
                 return self.short_string
 
-        return get_cmd_output(self.command, cwd=directory)
+        return f()
 
     def _exec_put(self, directory: str, additional_level: str = '', **kwargs) -> str:
         parsed = hparser.parse_args(self.command.split())
@@ -445,7 +460,13 @@ class Command:
                 """the index of last text symbol before the line contains the match"""
                 text = text[:start_match]
 
-        text = Command.translate_text(text, directory=directory, file_name=f)
+        text = Command.translate_text(
+            text,
+            directory=directory,
+            file_name=f,
+
+            parsed_namespace=kwargs.get('parsed_namespace')
+        )
 
         if f.endswith('.md'):  # additional markdown process
             text = Heading.add_headings(text, additional_level=additional_level)
@@ -466,7 +487,12 @@ class Command:
         return f(*args, **kwargs)
 
     @staticmethod
-    def translate_text(file_text: str, directory: str, file_name: str) -> str:
+    def translate_text(
+        file_text: str,
+        directory: str,
+        file_name: str,
+        parsed_namespace: argparse.Namespace
+    ) -> str:
 
         matches = [(m.start(), m.end()) for m in Command.RE.finditer(file_text)]
         if not matches:
@@ -489,7 +515,8 @@ class Command:
             _s, _e = pos
             return Command(file_text[_s:_e], from_file=file_name).exec(
                 additional_level=get_sector(_s),
-                directory=directory
+                directory=directory,
+                parsed_namespace=parsed_namespace
             )
 
         texts = []
@@ -520,11 +547,12 @@ class Command:
         return ''.join(texts)
 
     @staticmethod
-    def translate_file(path: str) -> str:
+    def translate_file(path: str, parsed_namespace: argparse.Namespace) -> str:
         return Command.translate_text(
             file_text=read_text(path),
             directory=str(Path(path).parent.absolute()),
-            file_name=path
+            file_name=path,
+            parsed_namespace=parsed_namespace
         )
 
 
@@ -540,6 +568,11 @@ mparser = argparse.ArgumentParser(
 
 mparser.add_argument('INPUT_FILE', type=str, help='Text file to process')
 mparser.add_argument('OUTPUT_FILE', type=str, help='Path to save the output document')
+mparser.add_argument(
+    '-e', '--ignore-shell-errors', action='store_true',
+    help='whether to ignore errors on shell commands',
+    dest='ignore_shell_errors'
+)
 
 
 def main():
@@ -555,9 +588,12 @@ def main():
     write_text(
         parsed.OUTPUT_FILE,
         text=Command.translate_file(
-            parsed.INPUT_FILE
+            parsed.INPUT_FILE,
+            parsed_namespace=parsed
         ),
     )
+
+    print(f"\n\n{parsed.INPUT_FILE} is successfully translated to {parsed.OUTPUT_FILE}")
 
 
 #endregion
