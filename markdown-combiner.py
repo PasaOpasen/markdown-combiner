@@ -533,7 +533,7 @@ class Command:
 mparser = argparse.ArgumentParser(
     prog='markdown-combiner.py',
     description=(
-        'Script with combines several files with shell insertions execution and special features for *.md files'
+        'Script which combines several files with shell insertions execution and special features for *.md files'
     ),
     formatter_class=argparse.ArgumentDefaultsHelpFormatter
 )
