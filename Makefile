@@ -1,6 +1,6 @@
 
 help:
-	python markdown-combiner.py -h
+	python3 markdown-combiner.py -h
 
 sub_help:
-	PARSER="sub" python markdown-combiner.py -h
+	PARSER="sub" python3 markdown-combiner.py -h
