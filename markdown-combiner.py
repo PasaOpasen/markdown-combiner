@@ -56,9 +56,9 @@ def get_cmd_output(command: Union[str, Sequence[Any]], cwd: Optional[str] = None
     else:
         args = [str(c) for c in command]
     return subprocess.check_output(
-        args,
+        ' '.join(args),
         shell=True,
-        cwd=cwd
+        cwd=cwd,
     ).decode('utf-8', 'replace').strip()
 
 
