@@ -51,7 +51,7 @@ def get_cmd_output(command: Union[str, Sequence[Any]], cwd: Optional[str] = None
     """runs shell command and returns its output"""
     import subprocess
 
-    if type(command) == str:
+    if isinstance(command, str):
         args = command.split()
     else:
         args = [str(c) for c in command]
